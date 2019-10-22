@@ -6,8 +6,9 @@
         <b-form-group id="input-group-2" label="Amount:" label-for="input-2">
           <b-form-input
             id="input-2"
-            type="number"
             v-model="form.amount"
+            @keyCode="decimalPlaces"
+            type="number"
             required
             placeholder="Enter Amount"
           ></b-form-input>
@@ -43,7 +44,7 @@
     data() {
       return {
         form: {
-          amount: 1,
+          amount: null,
           currency: null
         },
         currencies: [],
@@ -52,15 +53,29 @@
       }
     },
     methods: {
+      decimalPlaces ($event) {
+        console.log($event.keyCode); //keyCodes value
+        let keyCode = ($event.keyCode ? $event.keyCode : $event.which);
+
+        // only allow number and one dot
+        if ((keyCode < 48 || keyCode > 57) && (keyCode !== 46 || this.form.amount.indexOf('.') != -1)) { // 46 is dot
+          $event.preventDefault();
+        }
+
+        // restrict to 2 decimal places
+        if(this.form.amount!=null && this.form.amount.indexOf(".")>-1 && (this.form.amount.split('.')[1].length > 1)){
+        $event.preventDefault();
+        }
+      },
       onSubmit(evt) {
         evt.preventDefault()
-        // alert(JSON.stringify(this.form))
       },
       onReset(evt) {
         evt.preventDefault()
         // Reset our form values
-        this.form.amount = ''
+        this.form.amount = null
         this.form.currency = null
+
         // Trick to reset/clear native browser form validation state
         this.show = false
         this.$nextTick(() => {
@@ -78,14 +93,6 @@
       .then((jsonData) => {
         this.currencies = jsonData.rates
       })
-    },
-    watch: {
-      form: function (val) {
-        let numeral = require('numeral');
-        let number = numeral(val);
-        numeral.defaultFormat('0.00');
-        this.amount = number.format();
-      }
     }
   }
 </script>
